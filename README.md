@@ -1,5 +1,3 @@
-# maeda_search
-
 DJI Telloドローンを制御するGoプログラムのコレクション
 
 ## 概要
