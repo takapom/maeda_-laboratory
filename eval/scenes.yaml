@@ -1,0 +1,4 @@
+scenes:
+  - scene_id: default
+    scene_path: scenes/default_drone.ttt
+    scene_version: "1.0.0"
