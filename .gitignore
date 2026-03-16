@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+*.egg
+
+# Artifacts and workspace (runtime data)
+/artifacts/
+/workspace/
+
+# Secrets
+.env
+*.secret
+
+# IDE
+.vscode/
+.idea/
+
+# Local agent state
+.claude/
