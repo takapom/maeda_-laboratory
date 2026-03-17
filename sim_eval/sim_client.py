@@ -75,7 +75,7 @@ class SimClient:
             time.sleep(0.05)
 
     def get_simulation_time(self) -> float:
-        return self.sim.getSimulationTime()
+        return float(self.sim.getSimulationTime())
 
     def get_version(self) -> str:
         v = self.sim.getInt32Param(self.sim.intparam_program_version)

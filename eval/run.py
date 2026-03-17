@@ -30,7 +30,7 @@ def main(argv: list[str] | None = None) -> None:
     output_dir: Path = args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    episodes: list[dict] = []
+    episodes: list[dict[str, object]] = []
 
     for i, seed in enumerate(seeds):
         random.seed(seed)

@@ -47,7 +47,7 @@ def main(argv: list[str] | None = None) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     profile = load_profile(args.evaluation_profile)
-    errors: list[dict] = []
+    errors: list[dict[str, object]] = []
 
     # --- Evaluate baseline ---
     print("Evaluating baseline ...")
@@ -137,7 +137,7 @@ def _write_json(path: Path, data: object) -> None:
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False, default=str) + "\n")
 
 
-def _write_jsonl(path: Path, records: list[dict]) -> None:
+def _write_jsonl(path: Path, records: list[dict[str, object]]) -> None:
     with path.open("w") as f:
         for r in records:
             f.write(json.dumps(r, ensure_ascii=False, default=str) + "\n")
