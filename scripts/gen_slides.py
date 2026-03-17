@@ -144,9 +144,10 @@ def main():
         "2. 現在の進捗状況",
         "3. システムアーキテクチャ",
         "4. コードベース構成と各層の役割",
-        "5. Kubernetes案の検討と却下",
-        "6. 評価方法",
-        "7. ネクストアクション",
+        "5. End-to-End 動作確認結果",
+        "6. Kubernetes案の検討と却下",
+        "7. 評価方法",
+        "8. ネクストアクション",
     ]
     add_bullet_list(s, Inches(1.5), Inches(1.8), Inches(9), Inches(5),
                     items, font_size=22, color=WHITE)
@@ -385,7 +386,74 @@ def main():
                      desc, font_size=10, color=LIGHT_GRAY)
 
     # ════════════════════════════════════════
-    # Slide 7: Kubernetes案の検討と却下
+    # Slide 7: End-to-End 動作確認結果
+    # ════════════════════════════════════════
+    s = prs.slides.add_slide(blank)
+    slide_title(s, "End-to-End 動作確認結果", "スタブ sim-eval での全パイプライン完走を確認")
+
+    # パイプラインフロー（横並びボックス）
+    pipeline_stages = [
+        ("Clone", RGBColor(0x3A, 0x6A, 0x8A)),
+        ("Patch\nApply", RGBColor(0x6A, 0x5A, 0xCD)),
+        ("Static\nCheck", RGBColor(0x2D, 0x7F, 0x5F)),
+        ("sim-eval", RGBColor(0x8B, 0x6B, 0x13)),
+        ("Artifacts\n保存", RGBColor(0x2D, 0x5F, 0x8A)),
+    ]
+    for i, (label, color) in enumerate(pipeline_stages):
+        x = Inches(0.8 + i * 2.4)
+        add_rounded_rect(s, x, Inches(1.8), Inches(1.8), Inches(0.9),
+                         color, label, font_size=13)
+        if i < len(pipeline_stages) - 1:
+            add_text_box(s, x + Inches(1.8), Inches(1.95), Inches(0.6), Inches(0.5),
+                         "->", font_size=20, color=ACCENT, bold=True,
+                         align=PP_ALIGN.CENTER)
+
+    # 実行コマンド
+    add_text_box(s, Inches(0.8), Inches(3.0), Inches(5), Inches(0.4),
+                 "実行コマンド", font_size=16, color=ACCENT, bold=True)
+    cmd_text = (
+        "REPO_URL=...  BASE_REF=main\n"
+        "PATCH_FILE=/tmp/drone-poc/patch.diff\n"
+        "ARTIFACTS_ROOT=/tmp/drone-poc/artifacts\n"
+        "python -m agent_runner.cli --goal \"kpを1.5に上げて応答性を改善\""
+    )
+    add_text_box(s, Inches(0.8), Inches(3.4), Inches(6.0), Inches(1.8),
+                 cmd_text, font_size=11, color=ACCENT, font_name="Courier New")
+
+    # 生成されたアーティファクト一覧
+    add_text_box(s, Inches(7.2), Inches(3.0), Inches(5), Inches(0.4),
+                 "生成 Artifacts", font_size=16, color=ACCENT, bold=True)
+    artifact_items = [
+        "request.json    - 目標・制約の記録",
+        "git.json        - repo / base_ref / SHA",
+        "patch.diff      - 適用パッチ",
+        "patch_provider.json - パッチ提供元情報",
+        "params.json     - seed / episodes / scene",
+        "runtime.json    - host / Python版 / deps",
+        "metrics.json    - baseline/candidate/delta",
+        "summary.json    - 合否判定・比較結果",
+        "evaluation_profile.json",
+        "episodes_*.jsonl - raw observations",
+    ]
+    add_bullet_list(s, Inches(7.2), Inches(3.4), Inches(5.5), Inches(3.0),
+                    artifact_items, font_size=11, color=LIGHT_GRAY)
+
+    # 結果ステータスボックス
+    add_rounded_rect(s, Inches(0.8), Inches(5.5), Inches(5.5), Inches(1.2),
+                     RGBColor(0x2A, 0x4A, 0x2A),
+                     "Status: SUCCEEDED\n"
+                     "15 unit tests passed / lint passed\n"
+                     "stub sim-eval でメトリクス生成・比較・合否判定まで完走",
+                     font_size=13, font_color=GREEN_SOFT)
+
+    # 注記
+    add_text_box(s, Inches(7.2), Inches(5.8), Inches(5.5), Inches(0.8),
+                 "* 現時点では eval/run.py はスタブ（ランダム値）\n"
+                 "* CoppeliaSim 実機接続は次ステップで実装",
+                 font_size=12, color=RGBColor(0xFF, 0xCC, 0x80))
+
+    # ════════════════════════════════════════
+    # Slide 8: Kubernetes案の検討と却下
     # ════════════════════════════════════════
     s = prs.slides.add_slide(blank)
     slide_title(s, "Kubernetes案の検討と却下")
