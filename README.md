@@ -146,6 +146,79 @@ make unit        # pytest
 
 失敗 run でも `metrics.json` と `summary.json` は必ず生成される。
 
+## 評価結果の見方
+
+結果ファイルは次の順で読むと分かりやすい。
+
+1. `episodes_baseline.jsonl` / `episodes_candidate.jsonl`
+2. `metrics.json`
+3. `summary.json`
+
+`episodes_*.jsonl` が episode 単位の元データ、`metrics.json` がその集計結果、`summary.json` が最終判定である。
+
+### `summary.json`
+
+- `status`
+  - run 全体が正常終了したかどうかを表す
+  - `succeeded` は patch 適用、静的チェック、評価、artifact 出力まで完了したことを意味する
+- `passed`
+  - evaluation profile 上で不合格ではなかったことを表す
+  - 改善したことを直接保証する値ではない
+- `comparison.baseline`
+  - 変更前コードの集計結果
+- `comparison.candidate`
+  - 変更後コードの集計結果
+- `comparison.delta`
+  - `candidate - baseline` の差分
+  - `0.0` は差分なし、正負は metric ごとの定義に従う
+
+### `metrics.json`
+
+- `success_rate`
+  - 成功した episode 数 / 総 episode 数
+  - `1.0` は全 episode 成功、`0.0` は全 episode 失敗を意味する
+- `collision_count_mean`
+  - 全 episode の衝突回数合計 / 総 episode 数
+  - 小さいほど良い
+- `time_to_goal_mean_sec`
+  - 成功した episode のゴール到達時間の平均値
+  - 単位は秒で、小さいほど良い
+- `reward_mean`
+  - episode ごとの reward の平均値
+  - 具体的な意味は evaluator 実装に依存する
+- `baseline_meta` / `candidate_meta`
+  - 分母定義、成功 episode 数、失敗 episode 数などの集計条件
+
+### `episodes_baseline.jsonl` / `episodes_candidate.jsonl`
+
+各行が 1 episode の raw observation を表す。
+
+- `seed`
+  - その episode で使った乱数 seed
+  - 再現確認に使う
+- `status`
+  - episode の終了状態
+  - 例: `completed`, `error`
+- `success`
+  - その episode が成功扱いかどうか
+- `collision_count`
+  - その episode で発生した衝突回数
+- `time_to_goal_sec`
+  - ゴール到達までにかかった時間
+  - 未到達時は `null` になり得る
+- `reward`
+  - その episode の報酬値またはスコア
+- `timed_out`
+  - 時間上限で終了したかどうか
+- `error_code`
+  - 失敗時の理由コード
+
+### 読み方の補足
+
+- `episodes=1` の場合、`metrics.json` の値はほぼその 1 episode の値そのものになる
+- baseline と candidate が同じ値なら、今回の run では変更差分が結果に現れていない
+- 現在の PoC では `eval/run.py` が乱数 stub のため、値は実 simulator の挙動ではなく integration 用のダミー結果である
+
 ## 設計ドキュメント
 
 詳細な要件定義は [docs/not-k8s-architecture.md](docs/not-k8s-architecture.md) を参照。
