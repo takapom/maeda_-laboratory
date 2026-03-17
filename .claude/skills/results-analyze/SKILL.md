@@ -1,50 +1,50 @@
 ---
 name: results-analyze
 description: >-
-  Analyze and compare drone evaluation results across runs. View metrics trends,
-  compare specific runs side-by-side, re-evaluate with different profiles, and
-  export analysis summaries. Use when reviewing evaluation history or deciding next steps.
-compatibility: Requires Python 3.11+.
+  実行間でドローン評価結果を分析・比較する。メトリクスの推移を表示し、
+  特定の実行を並べて比較し、異なるプロファイルで再評価し、
+  分析サマリーをエクスポートする。評価履歴の確認や次のステップの判断に使用する。
+compatibility: Python 3.11+ が必要。
 allowed-tools: Bash(python:*) Read
 metadata:
   author: maeda-laboratory
   version: "0.1"
 ---
 
-## Overview
+## 概要
 
-This skill provides tools to analyze evaluation results stored in `$ARTIFACTS_ROOT/runs/`.
+このスキルは、`$ARTIFACTS_ROOT/runs/` に保存された評価結果を分析するツールを提供します。
 
-See [references/metrics-guide.md](references/metrics-guide.md) for metric definitions and interpretation.
+メトリクスの定義と解釈については [references/metrics-guide.md](references/metrics-guide.md) を参照してください。
 
-## Available scripts
+## 利用可能なスクリプト
 
-- **`scripts/compare-runs.py`** — Side-by-side comparison of two runs.
-- **`scripts/trend.py`** — Show metrics trend across recent runs.
-- **`scripts/re-evaluate.py`** — Re-evaluate episodes with a different evaluation_profile.
-- **`scripts/export-csv.py`** — Export run history to CSV for external analysis.
+- **`scripts/compare-runs.py`** — 2つの実行を並べて比較する。
+- **`scripts/trend.py`** — 直近の実行のメトリクス推移を表示する。
+- **`scripts/re-evaluate.py`** — 異なる評価プロファイルでエピソードを再評価する。
+- **`scripts/export-csv.py`** — 実行履歴を外部分析用に CSV でエクスポートする。
 
-## Usage examples
+## 使用例
 
-### Compare two runs
+### 2つの実行を比較
 
 ```bash
 python3 scripts/compare-runs.py RUN_ID_A RUN_ID_B
 ```
 
-### Show recent trends
+### 直近の推移を表示
 
 ```bash
 python3 scripts/trend.py --limit 10
 ```
 
-### Re-evaluate with a different profile
+### 異なるプロファイルで再評価
 
 ```bash
 python3 scripts/re-evaluate.py RUN_ID --success-rate-min 0.8 --collision-max 2.0
 ```
 
-### Export to CSV
+### CSV にエクスポート
 
 ```bash
 python3 scripts/export-csv.py --output /tmp/runs.csv

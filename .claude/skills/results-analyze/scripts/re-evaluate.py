@@ -1,24 +1,24 @@
 # /// script
 # dependencies = []
 # ///
-"""Re-evaluate a run's episodes with different evaluation criteria.
+"""異なる評価基準で実行のエピソードを再評価する。
 
-Does NOT re-run the simulation. Reads existing episodes JSONL and
-recomputes metrics/pass-fail with new thresholds.
+シミュレーションは再実行しない。既存のエピソード JSONL を読み込み、
+新しい閾値でメトリクス/合否判定を再計算する。
 
-Usage:
-    python3 scripts/re-evaluate.py RUN_ID [OPTIONS]
+使い方:
+    python3 scripts/re-evaluate.py RUN_ID [オプション]
 
-Options:
-    --success-rate-min FLOAT    Minimum success rate (default: 0.0)
-    --collision-max FLOAT       Maximum collision count mean (default: none)
-    --time-max FLOAT            Maximum time to goal mean sec (default: none)
-    --json                      Output as JSON
-    --help                      Show this help
+オプション:
+    --success-rate-min FLOAT    最小成功率（デフォルト: 0.0）
+    --collision-max FLOAT       最大平均衝突回数（デフォルト: なし）
+    --time-max FLOAT            最大ゴール到達平均時間（デフォルト: なし）
+    --json                      JSON で出力
+    --help                      このヘルプを表示
 
-Exit codes:
-    0  Re-evaluation passed
-    1  Re-evaluation failed or error
+終了コード:
+    0  再評価に合格
+    1  再評価に不合格またはエラー
 """
 
 from __future__ import annotations
@@ -56,21 +56,21 @@ def main() -> None:
             json_mode = True
             i += 1
         else:
-            print(f"Error: Unknown argument: {args[i]}", file=sys.stderr)
+            print(f"エラー: 不明な引数: {args[i]}", file=sys.stderr)
             sys.exit(1)
 
     artifacts_root = Path(os.environ.get("ARTIFACTS_ROOT", "/tmp/drone-poc/artifacts"))
     run_dir = artifacts_root / "runs" / run_id
 
     if not run_dir.exists():
-        print(f"Error: Run not found: {run_id}", file=sys.stderr)
+        print(f"エラー: 実行が見つかりません: {run_id}", file=sys.stderr)
         sys.exit(1)
 
-    # Re-compute metrics from episodes JSONL
+    # エピソード JSONL からメトリクスを再計算
     baseline_metrics = _compute_from_jsonl(run_dir / "episodes_baseline.jsonl")
     candidate_metrics = _compute_from_jsonl(run_dir / "episodes_candidate.jsonl")
 
-    # Apply new criteria
+    # 新しい基準を適用
     reasons: list[str] = []
     if sr_min is not None and candidate_metrics["success_rate"] is not None:
         if candidate_metrics["success_rate"] < sr_min:
@@ -92,7 +92,7 @@ def main() -> None:
     result = {
         "run_id": run_id,
         "passed": passed,
-        "reason": "; ".join(reasons) if reasons else "All criteria passed",
+        "reason": "; ".join(reasons) if reasons else "全基準に合格",
         "criteria": {
             "success_rate_min": sr_min,
             "collision_count_mean_max": cc_max,
@@ -105,11 +105,11 @@ def main() -> None:
     if json_mode:
         print(json.dumps(result, indent=2))
     else:
-        print(f"Run:    {run_id}")
-        print(f"Passed: {passed}")
-        print(f"Reason: {result['reason']}")
+        print(f"実行:    {run_id}")
+        print(f"合否:    {passed}")
+        print(f"理由:    {result['reason']}")
         print()
-        print("Candidate metrics:")
+        print("候補メトリクス:")
         for k, v in candidate_metrics.items():
             print(f"  {k}: {v}")
 

@@ -1,20 +1,20 @@
 # /// script
 # dependencies = []
 # ///
-"""Show metrics trend across recent evaluation runs.
+"""直近の評価実行のメトリクス推移を表示する。
 
-Usage:
-    python3 scripts/trend.py [--limit N] [--metric NAME] [--json]
+使い方:
+    python3 scripts/trend.py [--limit N] [--metric 名前] [--json]
 
-Options:
-    --limit N       Number of recent runs to show (default: 10)
-    --metric NAME   Focus on a specific metric (default: all primary metrics)
-    --json          Output as JSON
-    --help          Show this help
+オプション:
+    --limit N       表示する直近の実行数（デフォルト: 10）
+    --metric 名前   特定のメトリクスに絞る（デフォルト: 全主要メトリクス）
+    --json          JSON で出力
+    --help          このヘルプを表示
 
-Exit codes:
-    0  Success
-    1  No runs found
+終了コード:
+    0  成功
+    1  実行が見つからない
 """
 
 from __future__ import annotations
@@ -47,19 +47,19 @@ def main() -> None:
             json_mode = True
             i += 1
         else:
-            print(f"Error: Unknown argument: {args[i]}", file=sys.stderr)
+            print(f"エラー: 不明な引数: {args[i]}", file=sys.stderr)
             sys.exit(1)
 
     artifacts_root = Path(os.environ.get("ARTIFACTS_ROOT", "/tmp/drone-poc/artifacts"))
     runs_dir = artifacts_root / "runs"
 
     if not runs_dir.exists():
-        print("No runs found.", file=sys.stderr)
+        print("実行が見つかりませんでした。", file=sys.stderr)
         sys.exit(1)
 
     run_dirs = sorted(runs_dir.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True)
     run_dirs = run_dirs[:limit]
-    run_dirs.reverse()  # oldest first for trend
+    run_dirs.reverse()  # 推移表示のため古い順に
 
     rows = []
     for rd in run_dirs:
@@ -89,7 +89,7 @@ def main() -> None:
         rows.append(row)
 
     if not rows:
-        print("No runs found.", file=sys.stderr)
+        print("実行が見つかりませんでした。", file=sys.stderr)
         sys.exit(1)
 
     if json_mode:
@@ -100,8 +100,8 @@ def main() -> None:
     if metric_filter:
         metrics_keys = [metric_filter]
 
-    # Header
-    header = f"{'RUN_ID':>28s}  {'STATUS':>10s}"
+    # ヘッダー
+    header = f"{'実行ID':>28s}  {'ステータス':>10s}"
     for k in metrics_keys:
         short = k.replace("_mean", "").replace("_sec", "")[:16]
         header += f"  {short:>16s}"

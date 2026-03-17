@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# gen-patch.sh — Generate patch.diff from uncommitted controller/ changes.
+# gen-patch.sh — コミットされていない controller/ の変更から patch.diff を生成する。
 #
-# Usage:
-#   bash scripts/gen-patch.sh [--output FILE]
+# 使い方:
+#   bash scripts/gen-patch.sh [--output ファイル]
 #
-# Options:
-#   --output FILE   Write patch to FILE (default: /tmp/drone-poc/patch.diff)
-#   --help          Show this help
+# オプション:
+#   --output ファイル   パッチの出力先（デフォルト: /tmp/drone-poc/patch.diff）
+#   --help              このヘルプを表示
 #
-# Exit codes:
-#   0  Patch generated successfully
-#   1  No controller/ changes found
-#   2  Invalid arguments
+# 終了コード:
+#   0  パッチ生成成功
+#   1  controller/ の変更なし
+#   2  無効な引数
 
 OUTPUT="/tmp/drone-poc/patch.diff"
 
@@ -28,41 +28,41 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     *)
-      echo "Error: Unknown argument: $1" >&2
-      echo "Usage: bash scripts/gen-patch.sh [--output FILE]" >&2
+      echo "エラー: 不明な引数: $1" >&2
+      echo "使い方: bash scripts/gen-patch.sh [--output ファイル]" >&2
       exit 2
       ;;
   esac
 done
 
-# Find project root (where .git is)
+# プロジェクトルートを検出（.git の場所）
 PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || {
-  echo "Error: Not inside a git repository." >&2
+  echo "エラー: git リポジトリ内ではありません。" >&2
   exit 1
 }
 
-# Check for controller/ changes (staged + unstaged)
+# controller/ の変更を確認（ステージ済み + 未ステージ）
 DIFF="$(git -C "$PROJECT_ROOT" diff HEAD -- controller/)"
 
 if [[ -z "$DIFF" ]]; then
-  # Also check for untracked files in controller/
+  # controller/ の未追跡ファイルも確認
   UNTRACKED="$(git -C "$PROJECT_ROOT" ls-files --others --exclude-standard -- controller/)"
   if [[ -z "$UNTRACKED" ]]; then
-    echo "Error: No changes detected in controller/." >&2
-    echo "Modify files under controller/ before generating a patch." >&2
+    echo "エラー: controller/ に変更が検出されませんでした。" >&2
+    echo "パッチを生成する前に controller/ 配下のファイルを修正してください。" >&2
     exit 1
   fi
-  # For untracked files, use diff against /dev/null
+  # 未追跡ファイルの場合、/dev/null との差分を使用
   DIFF="$(git -C "$PROJECT_ROOT" diff --no-index /dev/null -- $UNTRACKED 2>/dev/null || true)"
   if [[ -z "$DIFF" ]]; then
-    echo "Error: Could not generate diff for untracked controller/ files." >&2
+    echo "エラー: 未追跡の controller/ ファイルの差分を生成できませんでした。" >&2
     exit 1
   fi
 fi
 
-# Write patch
+# パッチを出力
 mkdir -p "$(dirname "$OUTPUT")"
 echo "$DIFF" > "$OUTPUT"
 
 LINES="$(wc -l < "$OUTPUT" | tr -d ' ')"
-echo "Patch generated: $OUTPUT ($LINES lines)"
+echo "パッチ生成完了: $OUTPUT ($LINES 行)"

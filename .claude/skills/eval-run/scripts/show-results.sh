@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# show-results.sh — Display evaluation results for a completed run.
+# show-results.sh — 完了した実行の評価結果を表示する。
 #
-# Usage:
+# 使い方:
 #   bash scripts/show-results.sh <run_id>
 #   bash scripts/show-results.sh --latest
 #
-# Options:
-#   --latest    Show the most recent run
-#   --json      Output raw JSON instead of formatted summary
-#   --help      Show this help
+# オプション:
+#   --latest    最新の実行を表示
+#   --json      整形サマリーの代わりに生の JSON を出力
+#   --help      このヘルプを表示
 #
-# Exit codes:
-#   0  Results displayed
-#   1  Run not found
+# 終了コード:
+#   0  結果を表示
+#   1  実行が見つからない
 
 ARTIFACTS_ROOT="${ARTIFACTS_ROOT:-/tmp/drone-poc/artifacts}"
 RUN_ID=""
@@ -25,7 +25,7 @@ while [[ $# -gt 0 ]]; do
     --latest)
       RUN_ID="$(ls -t "$ARTIFACTS_ROOT/runs/" 2>/dev/null | head -1)"
       if [[ -z "$RUN_ID" ]]; then
-        echo "Error: No runs found in $ARTIFACTS_ROOT/runs/" >&2
+        echo "エラー: $ARTIFACTS_ROOT/runs/ に実行が見つかりません" >&2
         exit 1
       fi
       shift
@@ -46,8 +46,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$RUN_ID" ]]; then
-  echo "Error: run_id is required." >&2
-  echo "Usage: bash scripts/show-results.sh <run_id>" >&2
+  echo "エラー: run_id は必須です。" >&2
+  echo "使い方: bash scripts/show-results.sh <run_id>" >&2
   echo "       bash scripts/show-results.sh --latest" >&2
   exit 1
 fi
@@ -55,7 +55,7 @@ fi
 RUN_DIR="$ARTIFACTS_ROOT/runs/$RUN_ID"
 
 if [[ ! -d "$RUN_DIR" ]]; then
-  echo "Error: Run directory not found: $RUN_DIR" >&2
+  echo "エラー: 実行ディレクトリが見つかりません: $RUN_DIR" >&2
   exit 1
 fi
 
@@ -72,27 +72,27 @@ if $JSON_MODE; then
 fi
 
 echo "============================================"
-echo "  Run: $RUN_ID"
+echo "  実行: $RUN_ID"
 echo "============================================"
 echo ""
 
-# Summary
+# サマリー
 if [[ -f "$RUN_DIR/summary.json" ]]; then
-  STATUS="$(python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('status','unknown'))" < "$RUN_DIR/summary.json" 2>/dev/null || echo "unknown")"
+  STATUS="$(python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('status','不明'))" < "$RUN_DIR/summary.json" 2>/dev/null || echo "不明")"
   PASSED="$(python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('passed','N/A'))" < "$RUN_DIR/summary.json" 2>/dev/null || echo "N/A")"
   REASON="$(python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('reason',''))" < "$RUN_DIR/summary.json" 2>/dev/null || echo "")"
 
-  echo "  Status:  $STATUS"
-  echo "  Passed:  $PASSED"
+  echo "  ステータス:  $STATUS"
+  echo "  合否:        $PASSED"
   if [[ -n "$REASON" ]]; then
-    echo "  Reason:  $REASON"
+    echo "  理由:        $REASON"
   fi
   echo ""
 fi
 
-# Metrics
+# メトリクス
 if [[ -f "$RUN_DIR/metrics.json" ]]; then
-  echo "--- Metrics ---"
+  echo "--- メトリクス ---"
   python3 -c "
 import json, sys
 d = json.load(sys.stdin)
@@ -107,11 +107,11 @@ if delta:
     print('  delta:')
     for k, v in delta.items():
         print(f'    {k}: {v}')
-" < "$RUN_DIR/metrics.json" 2>/dev/null || echo "  (could not parse metrics.json)"
+" < "$RUN_DIR/metrics.json" 2>/dev/null || echo "  （metrics.json の解析に失敗しました）"
   echo ""
 fi
 
-# Errors
+# エラー
 if [[ -f "$RUN_DIR/metrics.json" ]]; then
   ERRORS="$(python3 -c "
 import json, sys
@@ -122,10 +122,10 @@ if errs:
         print(f\"  [{e.get('code','?')}] {e.get('message','')}\")
 " < "$RUN_DIR/metrics.json" 2>/dev/null)"
   if [[ -n "$ERRORS" ]]; then
-    echo "--- Errors ---"
+    echo "--- エラー ---"
     echo "$ERRORS"
     echo ""
   fi
 fi
 
-echo "  Artifacts: $RUN_DIR/"
+echo "  アーティファクト: $RUN_DIR/"

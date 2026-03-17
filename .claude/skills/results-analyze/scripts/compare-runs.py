@@ -1,19 +1,19 @@
 # /// script
 # dependencies = []
 # ///
-"""Compare two evaluation runs side-by-side.
+"""2つの評価実行を並べて比較する。
 
-Usage:
+使い方:
     python3 scripts/compare-runs.py RUN_A RUN_B
     python3 scripts/compare-runs.py RUN_A RUN_B --json
 
-Options:
-    --json    Output as JSON instead of formatted table
-    --help    Show this help
+オプション:
+    --json    整形テーブルの代わりに JSON で出力
+    --help    このヘルプを表示
 
-Exit codes:
-    0  Success
-    1  Run not found or parse error
+終了コード:
+    0  成功
+    1  実行が見つからないまたは解析エラー
 """
 
 from __future__ import annotations
@@ -41,10 +41,10 @@ def main() -> None:
     data_b = _load_run(artifacts_root, run_b)
 
     if data_a is None:
-        print(f"Error: Run not found: {run_a}", file=sys.stderr)
+        print(f"エラー: 実行が見つかりません: {run_a}", file=sys.stderr)
         sys.exit(1)
     if data_b is None:
-        print(f"Error: Run not found: {run_b}", file=sys.stderr)
+        print(f"エラー: 実行が見つかりません: {run_b}", file=sys.stderr)
         sys.exit(1)
 
     if json_mode:
@@ -73,23 +73,23 @@ def _print_comparison(id_a: str, a: dict, id_b: str, b: dict) -> None:
     goal_a = a.get("request", {}).get("goal", "N/A")
     goal_b = b.get("request", {}).get("goal", "N/A")
 
-    print(f"{'':30s} {'Run A':>20s}  {'Run B':>20s}")
+    print(f"{'':30s} {'実行A':>20s}  {'実行B':>20s}")
     print(f"{'ID':30s} {id_a:>20s}  {id_b:>20s}")
-    print(f"{'Goal':30s} {goal_a[:20]:>20s}  {goal_b[:20]:>20s}")
+    print(f"{'目標':30s} {goal_a[:20]:>20s}  {goal_b[:20]:>20s}")
 
     status_a = a.get("summary", {}).get("status", "?")
     status_b = b.get("summary", {}).get("status", "?")
-    print(f"{'Status':30s} {status_a:>20s}  {status_b:>20s}")
+    print(f"{'ステータス':30s} {status_a:>20s}  {status_b:>20s}")
 
     passed_a = str(a.get("summary", {}).get("passed", "?"))
     passed_b = str(b.get("summary", {}).get("passed", "?"))
-    print(f"{'Passed':30s} {passed_a:>20s}  {passed_b:>20s}")
+    print(f"{'合否':30s} {passed_a:>20s}  {passed_b:>20s}")
     print()
 
     metrics_a = a.get("metrics", {}).get("candidate", {}) or {}
     metrics_b = b.get("metrics", {}).get("candidate", {}) or {}
 
-    print("--- Candidate Metrics ---")
+    print("--- 候補メトリクス ---")
     all_keys = sorted(set(list(metrics_a.keys()) + list(metrics_b.keys())))
     for k in all_keys:
         va = metrics_a.get(k)

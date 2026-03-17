@@ -1,64 +1,64 @@
-# Controller Architecture Guide
+# コントローラーアーキテクチャガイド
 
-## Directory structure
+## ディレクトリ構成
 
 ```
 controller/
   __init__.py
-  drone_controller.py    # Main controller class
+  drone_controller.py    # メインのコントローラークラス
 ```
 
-## DroneController class
+## DroneController クラス
 
-The core class in `drone_controller.py`:
+`drone_controller.py` の中核クラス：
 
 ```python
 class DroneController:
     def __init__(self, goal_position):
         self.goal_position = goal_position
-        self.kp = 1.0  # proportional gain
+        self.kp = 1.0  # 比例ゲイン
 
     def compute_control(self, current_position, current_velocity):
-        # Returns (vx, vy, vz) velocity command
+        # (vx, vy, vz) の速度指令を返す
         ...
 ```
 
-### Key interface
+### 主要インターフェース
 
-- **Input**: `current_position (x, y, z)` and `current_velocity (vx, vy, vz)`
-- **Output**: `(vx, vy, vz)` velocity command tuple
-- **Goal**: Navigate to `self.goal_position` while minimizing collisions and time
+- **入力**: `current_position (x, y, z)` と `current_velocity (vx, vy, vz)`
+- **出力**: `(vx, vy, vz)` 速度指令タプル
+- **目標**: 衝突と所要時間を最小化しつつ `self.goal_position` へ移動する
 
-### Evaluation metrics
+### 評価メトリクス
 
-The controller is evaluated on:
+コントローラーは以下で評価される：
 
-1. **success_rate** — Fraction of episodes reaching the goal
-2. **collision_count_mean** — Average collisions per episode (lower is better)
-3. **time_to_goal_mean_sec** — Average time to reach goal in successful episodes (lower is better)
-4. **reward_mean** — Average cumulative reward (diagnostic)
+1. **success_rate** — ゴールに到達したエピソードの割合
+2. **collision_count_mean** — エピソードあたりの平均衝突回数（低いほど良い）
+3. **time_to_goal_mean_sec** — 成功エピソードでのゴール到達平均時間（低いほど良い）
+4. **reward_mean** — 平均累積報酬（診断用）
 
-## Modification guidelines
+## 修正ガイドライン
 
-### Safe changes
+### 安全な変更
 
-- Tuning gain parameters (`kp`, `kd`, `ki`)
-- Adding new control terms (derivative, integral)
-- Adding obstacle detection/avoidance logic
-- Adding trajectory smoothing
-- Adding state estimation improvements
+- ゲインパラメータの調整（`kp`、`kd`、`ki`）
+- 新しい制御項の追加（微分、積分）
+- 障害物検出・回避ロジックの追加
+- 軌道平滑化の追加
+- 状態推定の改善
 
-### Avoid
+### 避けるべきこと
 
-- Changing the `compute_control` method signature
-- Importing modules not available in the eval environment
-- Adding file I/O or network calls
-- Modifying files outside `controller/`
+- `compute_control` メソッドのシグネチャ変更
+- 評価環境で利用できないモジュールのインポート
+- ファイル I/O やネットワーク呼び出しの追加
+- `controller/` 外のファイルの修正
 
-## Adding new files
+## 新しいファイルの追加
 
-New files can be added under `controller/`. They will be included in the patch.
-Import them from `drone_controller.py` as needed:
+`controller/` 配下に新しいファイルを追加できます。パッチに含まれます。
+必要に応じて `drone_controller.py` からインポートしてください：
 
 ```python
 # controller/utils.py

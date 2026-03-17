@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# list-past-goals.sh — List goals and status from previous evaluation runs.
+# list-past-goals.sh — 過去の評価実行の目標とステータスを一覧表示する。
 #
-# Usage:
+# 使い方:
 #   bash scripts/list-past-goals.sh [--limit N]
 #
-# Options:
-#   --limit N   Show last N runs (default: 10)
-#   --help      Show this help
+# オプション:
+#   --limit N   直近 N 件の実行を表示（デフォルト: 10）
+#   --help      このヘルプを表示
 #
-# Exit codes:
-#   0  Success
-#   1  No runs found
+# 終了コード:
+#   0  成功
+#   1  実行が見つからない
 
 ARTIFACTS_ROOT="${ARTIFACTS_ROOT:-/tmp/drone-poc/artifacts}"
 LIMIT=10
@@ -28,7 +28,7 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     *)
-      echo "Error: Unknown argument: $1" >&2
+      echo "エラー: 不明な引数: $1" >&2
       exit 1
       ;;
   esac
@@ -37,18 +37,18 @@ done
 RUNS_DIR="$ARTIFACTS_ROOT/runs"
 
 if [[ ! -d "$RUNS_DIR" ]]; then
-  echo "No runs found in $RUNS_DIR"
+  echo "$RUNS_DIR に実行が見つかりません"
   exit 1
 fi
 
 RUNS="$(ls -t "$RUNS_DIR" 2>/dev/null | head -"$LIMIT")"
 
 if [[ -z "$RUNS" ]]; then
-  echo "No runs found."
+  echo "実行が見つかりませんでした。"
   exit 1
 fi
 
-printf "%-28s %-12s %-6s %s\n" "RUN_ID" "STATUS" "PASS" "GOAL"
+printf "%-28s %-12s %-6s %s\n" "実行ID" "ステータス" "合否" "目標"
 printf "%-28s %-12s %-6s %s\n" "---" "---" "---" "---"
 
 for run_id in $RUNS; do

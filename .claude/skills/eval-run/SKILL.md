@@ -1,86 +1,86 @@
 ---
 name: eval-run
 description: >-
-  Run a drone controller evaluation. Generates a patch.diff from controller/ changes,
-  then executes Agent Runner to evaluate baseline vs candidate on CoppeliaSim.
-  Use when the user wants to evaluate controller code changes or run a simulation comparison.
-compatibility: Requires Python 3.11+, git, and project venv (.venv) activated.
+  ドローンコントローラーの評価を実行する。controller/ の変更から patch.diff を生成し、
+  Agent Runner を使って CoppeliaSim 上でベースラインと候補を評価する。
+  コントローラーコードの変更を評価したい場合やシミュレーション比較を実行したい場合に使用する。
+compatibility: Python 3.11+、git、プロジェクトの仮想環境（.venv）が有効化されていること。
 allowed-tools: Bash(git:*) Bash(python:*) Read Write
 metadata:
   author: maeda-laboratory
   version: "0.1"
 ---
 
-## Overview
+## 概要
 
-This skill runs an end-to-end evaluation of controller code changes against the baseline.
+このスキルは、コントローラーコードの変更をベースラインに対してエンドツーエンドで評価します。
 
-The workflow is:
+ワークフロー：
 
-1. Generate a `patch.diff` from current `controller/` changes
-2. Execute Agent Runner with the patch
-3. Report evaluation results (metrics, comparison, pass/fail)
+1. 現在の `controller/` の変更から `patch.diff` を生成
+2. パッチを使って Agent Runner を実行
+3. 評価結果を報告（メトリクス、比較、合否判定）
 
-See [references/workflow.md](references/workflow.md) for the detailed step-by-step procedure.
+詳細な手順は [references/workflow.md](references/workflow.md) を参照してください。
 
-## Quick start
+## クイックスタート
 
-Generate a patch and run evaluation:
-
-```bash
-bash scripts/run-eval.sh --goal "Describe the optimization goal"
-```
-
-## Available scripts
-
-- **`scripts/run-eval.sh`** — Main entry point. Generates patch from working tree, runs evaluation, prints summary.
-- **`scripts/gen-patch.sh`** — Generates `patch.diff` from uncommitted `controller/` changes.
-- **`scripts/show-results.sh`** — Displays metrics and summary from a completed run.
-
-## Typical usage
-
-### 1. Modify controller code
-
-Edit files under `controller/` to improve drone behavior (e.g., tune gains, change logic).
-
-### 2. Run evaluation
+パッチを生成して評価を実行：
 
 ```bash
-bash scripts/run-eval.sh --goal "Reduce collision count while maintaining success rate"
+bash scripts/run-eval.sh --goal "最適化の目標を記述"
 ```
 
-The script will:
-- Detect the project root and venv
-- Generate a patch from uncommitted `controller/` changes
-- Run Agent Runner with the patch
-- Print the evaluation summary
+## 利用可能なスクリプト
 
-### 3. Review results
+- **`scripts/run-eval.sh`** — メインのエントリーポイント。ワーキングツリーからパッチを生成し、評価を実行し、サマリーを表示する。
+- **`scripts/gen-patch.sh`** — コミットされていない `controller/` の変更から `patch.diff` を生成する。
+- **`scripts/show-results.sh`** — 完了した実行のメトリクスとサマリーを表示する。
+
+## 一般的な使い方
+
+### 1. コントローラーコードを修正
+
+`controller/` 配下のファイルを編集してドローンの動作を改善する（例：ゲインの調整、ロジックの変更）。
+
+### 2. 評価を実行
+
+```bash
+bash scripts/run-eval.sh --goal "成功率を維持しつつ衝突回数を減らす"
+```
+
+スクリプトは以下を行います：
+- プロジェクトルートと仮想環境を検出
+- コミットされていない `controller/` の変更からパッチを生成
+- パッチを使って Agent Runner を実行
+- 評価サマリーを表示
+
+### 3. 結果を確認
 
 ```bash
 bash scripts/show-results.sh <run_id>
 ```
 
-Or inspect artifacts directly:
+またはアーティファクトを直接確認：
 
 ```bash
 cat $ARTIFACTS_ROOT/runs/<run_id>/summary.json | python3 -m json.tool
 cat $ARTIFACTS_ROOT/runs/<run_id>/metrics.json | python3 -m json.tool
 ```
 
-## Environment variables
+## 環境変数
 
-The scripts respect the following (with defaults):
+スクリプトは以下の環境変数を参照します（デフォルト値あり）：
 
-| Variable | Default | Description |
+| 変数 | デフォルト値 | 説明 |
 |---|---|---|
-| `ARTIFACTS_ROOT` | `/tmp/drone-poc/artifacts` | Where run artifacts are stored |
-| `WORKSPACE_ROOT` | `/tmp/drone-poc/workspace` | Where fresh clones are created |
-| `COPPELIASIM_HOST` | `127.0.0.1` | CoppeliaSim host |
-| `COPPELIASIM_PORT` | `23000` | CoppeliaSim port |
+| `ARTIFACTS_ROOT` | `/tmp/drone-poc/artifacts` | 実行アーティファクトの保存先 |
+| `WORKSPACE_ROOT` | `/tmp/drone-poc/workspace` | クリーンクローンの作成先 |
+| `COPPELIASIM_HOST` | `127.0.0.1` | CoppeliaSim ホスト |
+| `COPPELIASIM_PORT` | `23000` | CoppeliaSim ポート |
 
-## Error handling
+## エラーハンドリング
 
-- If no `controller/` changes exist, the patch generation step fails with a clear message.
-- If Agent Runner exits non-zero, the script prints stderr and the path to `stdout.log`.
-- Stale lock files are detected and reported with removal instructions.
+- `controller/` の変更がない場合、パッチ生成ステップが明確なメッセージで失敗する。
+- Agent Runner が非ゼロで終了した場合、スクリプトは stderr と `stdout.log` のパスを表示する。
+- 古いロックファイルが検出された場合、削除方法が案内される。

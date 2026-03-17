@@ -1,19 +1,19 @@
 # /// script
 # dependencies = []
 # ///
-"""Export evaluation run history to CSV.
+"""評価実行履歴を CSV にエクスポートする。
 
-Usage:
-    python3 scripts/export-csv.py [--output FILE] [--limit N]
+使い方:
+    python3 scripts/export-csv.py [--output ファイル] [--limit N]
 
-Options:
-    --output FILE   Write CSV to FILE (default: stdout)
-    --limit N       Export last N runs (default: all)
-    --help          Show this help
+オプション:
+    --output ファイル   CSV の出力先（デフォルト: 標準出力）
+    --limit N           直近 N 件の実行をエクスポート（デフォルト: 全件）
+    --help              このヘルプを表示
 
-Exit codes:
-    0  Success
-    1  No runs found
+終了コード:
+    0  成功
+    1  実行が見つからない
 """
 
 from __future__ import annotations
@@ -61,14 +61,14 @@ def main() -> None:
             limit = int(args[i + 1])
             i += 2
         else:
-            print(f"Error: Unknown argument: {args[i]}", file=sys.stderr)
+            print(f"エラー: 不明な引数: {args[i]}", file=sys.stderr)
             sys.exit(1)
 
     artifacts_root = Path(os.environ.get("ARTIFACTS_ROOT", "/tmp/drone-poc/artifacts"))
     runs_dir = artifacts_root / "runs"
 
     if not runs_dir.exists():
-        print("No runs found.", file=sys.stderr)
+        print("実行が見つかりませんでした。", file=sys.stderr)
         sys.exit(1)
 
     run_dirs = sorted(runs_dir.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True)
@@ -77,7 +77,7 @@ def main() -> None:
     run_dirs.reverse()
 
     if not run_dirs:
-        print("No runs found.", file=sys.stderr)
+        print("実行が見つかりませんでした。", file=sys.stderr)
         sys.exit(1)
 
     buf = StringIO() if output_file is None else None
@@ -91,7 +91,7 @@ def main() -> None:
 
     if output_file:
         out.close()
-        print(f"Exported {len(run_dirs)} runs to {output_file}")
+        print(f"{len(run_dirs)} 件の実行を {output_file} にエクスポートしました")
     else:
         sys.stdout.write(buf.getvalue())
 

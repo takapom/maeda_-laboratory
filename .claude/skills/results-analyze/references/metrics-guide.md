@@ -1,61 +1,61 @@
-# Metrics Guide
+# メトリクスガイド
 
-## Primary metrics
+## 主要メトリクス
 
-### success_rate
+### success_rate（成功率）
 
-- **Definition**: Successful episodes / total episodes
-- **Range**: 0.0 - 1.0
-- **Direction**: Higher is better
-- **Notes**: Connection failures and mid-episode crashes count as failures in the denominator
+- **定義**: 成功エピソード数 / 総エピソード数
+- **範囲**: 0.0 - 1.0
+- **方向**: 高いほど良い
+- **備考**: 接続失敗やエピソード途中のクラッシュは分母の失敗としてカウントされる
 
-### collision_count_mean
+### collision_count_mean（平均衝突回数）
 
-- **Definition**: Total collisions across all episodes / total episodes
-- **Range**: 0.0 - infinity
-- **Direction**: Lower is better
-- **Notes**: Counted for all episodes, including failed ones
+- **定義**: 全エピソードの衝突総数 / 総エピソード数
+- **範囲**: 0.0 - 無限大
+- **方向**: 低いほど良い
+- **備考**: 失敗エピソードを含む全エピソードでカウント
 
-### time_to_goal_mean_sec
+### time_to_goal_mean_sec（ゴール到達平均時間）
 
-- **Definition**: Average simulation time to reach goal, among successful episodes only
-- **Range**: 0.0 - sim_time_limit_sec, or null
-- **Direction**: Lower is better
-- **Notes**: null when success_rate is 0 (no successful episodes to average)
+- **定義**: 成功エピソードのみにおけるゴール到達までの平均シミュレーション時間
+- **範囲**: 0.0 - sim_time_limit_sec、または null
+- **方向**: 低いほど良い
+- **備考**: success_rate が 0 の場合は null（平均を取る成功エピソードがない）
 
-## Diagnostic metric
+## 診断用メトリクス
 
-### reward_mean
+### reward_mean（平均報酬）
 
-- **Definition**: Average cumulative reward across all episodes
-- **Direction**: Higher is better
-- **Notes**: Diagnostic only. Not used in pass/fail criteria by default.
+- **定義**: 全エピソードの平均累積報酬
+- **方向**: 高いほど良い
+- **備考**: 診断専用。デフォルトでは合否判定に使用されない。
 
-## Delta interpretation
+## デルタの解釈
 
-Deltas are computed as `candidate - baseline`:
+デルタは `候補 - ベースライン` として計算される：
 
-| Metric | Positive delta | Negative delta |
+| メトリクス | 正のデルタ | 負のデルタ |
 |---|---|---|
-| success_rate | Improvement | Regression |
-| collision_count_mean | Regression | Improvement |
-| time_to_goal_mean_sec | Regression | Improvement |
-| reward_mean | Improvement | Regression |
+| success_rate | 改善 | 悪化 |
+| collision_count_mean | 悪化 | 改善 |
+| time_to_goal_mean_sec | 悪化 | 改善 |
+| reward_mean | 改善 | 悪化 |
 
-## Evaluation profile
+## 評価プロファイル
 
-The `evaluation_profile.json` defines:
+`evaluation_profile.json` は以下を定義する：
 
-- **primary_metrics**: Which metrics to consider
-- **weights**: Relative importance of each metric
-- **pass_criteria**: Thresholds for pass/fail
-  - `success_rate_min`: Minimum acceptable success rate
-  - `collision_count_mean_max`: Maximum acceptable collision rate
-  - `time_to_goal_mean_sec_max`: Maximum acceptable average time
+- **primary_metrics**: 考慮するメトリクス
+- **weights**: 各メトリクスの相対的な重要度
+- **pass_criteria**: 合否判定の閾値
+  - `success_rate_min`: 許容される最小成功率
+  - `collision_count_mean_max`: 許容される最大衝突率
+  - `time_to_goal_mean_sec_max`: 許容される最大平均時間
 
-A run "passes" if all specified criteria are met by the candidate.
+候補が指定された全ての基準を満たした場合に実行は「合格」となる。
 
-## Re-evaluation
+## 再評価
 
-Since raw observations are preserved in `episodes_baseline.jsonl` / `episodes_candidate.jsonl`,
-metrics can be re-computed with different weights or thresholds without re-running the simulation.
+生の観測データが `episodes_baseline.jsonl` / `episodes_candidate.jsonl` に保存されているため、
+シミュレーションを再実行せずに異なる重みや閾値でメトリクスを再計算できる。

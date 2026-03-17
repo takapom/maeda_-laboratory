@@ -1,52 +1,52 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# validate-patch.sh — Validate controller/ changes before generating a patch.
+# validate-patch.sh — パッチ生成前に controller/ の変更を検証する。
 #
-# Usage:
+# 使い方:
 #   bash scripts/validate-patch.sh
 #
-# Checks:
-#   1. controller/ has uncommitted changes
-#   2. Changes are limited to controller/ only
-#   3. Modified Python files have valid syntax
-#   4. Preview of the diff
+# チェック項目:
+#   1. controller/ にコミットされていない変更がある
+#   2. 変更が controller/ のみに限定されている
+#   3. 修正された Python ファイルのシンタックスが正しい
+#   4. 差分のプレビュー
 #
-# Exit codes:
-#   0  All checks passed
-#   1  Validation failed
+# 終了コード:
+#   0  全チェック合格
+#   1  検証失敗
 
 PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || {
-  echo "Error: Not inside a git repository." >&2
+  echo "エラー: git リポジトリ内ではありません。" >&2
   exit 1
 }
 
 ERRORS=0
 
-echo "==> Checking for controller/ changes ..."
+echo "==> controller/ の変更を確認中 ..."
 DIFF="$(git -C "$PROJECT_ROOT" diff HEAD -- controller/)"
 if [[ -z "$DIFF" ]]; then
-  echo "  FAIL: No changes detected in controller/" >&2
+  echo "  失敗: controller/ に変更が検出されません" >&2
   ERRORS=$((ERRORS + 1))
 else
   LINES="$(echo "$DIFF" | wc -l | tr -d ' ')"
-  echo "  OK: $LINES lines of diff in controller/"
+  echo "  OK: controller/ に $LINES 行の差分"
 fi
 
 echo ""
-echo "==> Checking for changes outside controller/ ..."
+echo "==> controller/ 外の変更を確認中 ..."
 OTHER_DIFF="$(git -C "$PROJECT_ROOT" diff HEAD -- ':!controller/' ':!.claude/')"
 if [[ -n "$OTHER_DIFF" ]]; then
   CHANGED_FILES="$(git -C "$PROJECT_ROOT" diff HEAD --name-only -- ':!controller/' ':!.claude/')"
-  echo "  WARN: Changes detected outside controller/:" >&2
+  echo "  警告: controller/ 外で変更が検出されました:" >&2
   echo "$CHANGED_FILES" | sed 's/^/    /' >&2
-  echo "  These will NOT be included in the patch." >&2
+  echo "  これらの変更はパッチに含まれません。" >&2
 else
-  echo "  OK: No changes outside controller/"
+  echo "  OK: controller/ 外に変更なし"
 fi
 
 echo ""
-echo "==> Syntax checking modified Python files ..."
+echo "==> 修正された Python ファイルのシンタックスチェック中 ..."
 MODIFIED="$(git -C "$PROJECT_ROOT" diff HEAD --name-only -- 'controller/*.py' 2>/dev/null || true)"
 if [[ -n "$MODIFIED" ]]; then
   for f in $MODIFIED; do
@@ -55,30 +55,30 @@ if [[ -n "$MODIFIED" ]]; then
       if python3 -c "import py_compile; py_compile.compile('$FULL', doraise=True)" 2>/dev/null; then
         echo "  OK: $f"
       else
-        echo "  FAIL: $f has syntax errors" >&2
+        echo "  失敗: $f にシンタックスエラーがあります" >&2
         ERRORS=$((ERRORS + 1))
       fi
     fi
   done
 else
-  echo "  (no modified .py files)"
+  echo "  （修正された .py ファイルなし）"
 fi
 
 echo ""
-echo "==> Diff preview ..."
+echo "==> 差分プレビュー ..."
 if [[ -n "$DIFF" ]]; then
   echo "$DIFF" | head -40
   TOTAL="$(echo "$DIFF" | wc -l | tr -d ' ')"
   if [[ $TOTAL -gt 40 ]]; then
-    echo "  ... ($((TOTAL - 40)) more lines)"
+    echo "  ... （残り $((TOTAL - 40)) 行）"
   fi
 fi
 
 echo ""
 if [[ $ERRORS -gt 0 ]]; then
-  echo "RESULT: Validation FAILED ($ERRORS error(s))"
+  echo "結果: 検証失敗（$ERRORS 件のエラー）"
   exit 1
 else
-  echo "RESULT: Validation PASSED"
+  echo "結果: 検証合格"
   exit 0
 fi

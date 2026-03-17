@@ -1,102 +1,102 @@
-# Evaluation Run Workflow
+# 評価実行ワークフロー
 
-## Prerequisites
+## 前提条件
 
-- Project venv (`.venv`) must be set up: `pip install -e ".[dev]"`
-- The repo must have at least one commit (Agent Runner clones from it)
-- `controller/` changes must be present in the working tree (unstaged or staged)
+- プロジェクトの仮想環境（`.venv`）がセットアップ済み：`pip install -e ".[dev]"`
+- リポジトリに最低1つのコミットがあること（Agent Runner がクローンするため）
+- `controller/` の変更がワーキングツリーに存在すること（ステージ済みまたは未ステージ）
 
-## Step-by-step procedure
+## 手順
 
-### 1. Prepare controller changes
+### 1. コントローラーの変更を準備
 
-Edit files under `controller/` to improve the drone behavior. Changes should be limited to `controller/` only — `eval/` is fixed in PoC.
+`controller/` 配下のファイルを編集してドローンの動作を改善する。変更は `controller/` のみに限定すること — `eval/` は PoC では固定。
 
-### 2. Generate patch.diff
+### 2. patch.diff を生成
 
 ```bash
 bash scripts/gen-patch.sh
 ```
 
-This creates a `patch.diff` in `/tmp/drone-poc/` from the current `controller/` diff.
+現在の `controller/` の差分から `/tmp/drone-poc/` に `patch.diff` を作成する。
 
-If no changes are detected, the script exits with code 1 and prints an error.
+変更が検出されない場合、スクリプトは終了コード 1 でエラーメッセージを表示する。
 
-### 3. Run evaluation
+### 3. 評価を実行
 
 ```bash
-bash scripts/run-eval.sh --goal "<optimization goal>"
+bash scripts/run-eval.sh --goal "<最適化の目標>"
 ```
 
-Or with explicit options:
+または明示的なオプション付きで：
 
 ```bash
 bash scripts/run-eval.sh \
-  --goal "Increase proportional gain for faster response" \
-  --constraints "Do not increase collision count"
+  --goal "より速い応答のために比例ゲインを増加" \
+  --constraints "衝突回数を増やさないこと"
 ```
 
-What happens internally:
+内部で行われる処理：
 
-1. `gen-patch.sh` generates `/tmp/drone-poc/patch.diff`
-2. Agent Runner is invoked:
-   - Acquires lock
-   - Fresh clones the repo at HEAD
-   - Applies patch to the clone
-   - Runs `make lint`, `make typecheck`, `make unit`
-   - Launches sim-eval as subprocess
-   - sim-eval evaluates baseline and candidate with same seeds/scene
-   - Writes metrics.json, summary.json, episodes JSONL
-   - Releases lock
+1. `gen-patch.sh` が `/tmp/drone-poc/patch.diff` を生成
+2. Agent Runner が呼び出される：
+   - ロックを取得
+   - HEAD でリポジトリをクリーンクローン
+   - クローンにパッチを適用
+   - `make lint`、`make typecheck`、`make unit` を実行
+   - サブプロセスとして sim-eval を起動
+   - sim-eval が同じシード/シーンでベースラインと候補を評価
+   - metrics.json、summary.json、エピソード JSONL を出力
+   - ロックを解放
 
-### 4. Review results
+### 4. 結果を確認
 
 ```bash
 bash scripts/show-results.sh <run_id>
 ```
 
-The script prints:
-- Run status (succeeded / failed / timed_out)
-- Baseline vs candidate metrics
-- Delta (improvement/regression)
-- Pass/fail based on evaluation_profile
+スクリプトは以下を表示：
+- 実行ステータス（成功 / 失敗 / タイムアウト）
+- ベースライン vs 候補のメトリクス
+- デルタ（改善/悪化）
+- 評価プロファイルに基づく合否判定
 
-### 5. Iterate
+### 5. 反復
 
-Based on results, modify `controller/` and re-run from step 2.
+結果に基づいて `controller/` を修正し、ステップ 2 から再実行する。
 
-## Artifacts layout
+## アーティファクトの構成
 
-After a run, `$ARTIFACTS_ROOT/runs/<run_id>/` contains:
+実行後、`$ARTIFACTS_ROOT/runs/<run_id>/` には以下が含まれる：
 
 ```
-request.json              Goal and constraints
-patch.diff                The exact diff applied
-git.json                  Repo URL, base_ref, SHA
-params.json               Seeds, episodes, timeouts
-patch_provider.json       How the patch was generated
-runtime.json              Python version, dependency hash
-evaluation_profile.json   Weights, pass criteria
-metrics.json              Baseline/candidate metrics + delta
-summary.json              Pass/fail judgment + reason
-episodes_baseline.jsonl   Per-episode raw observations (baseline)
-episodes_candidate.jsonl  Per-episode raw observations (candidate)
-stdout.log                sim-eval stdout
-stderr.log                sim-eval stderr
+request.json              目標と制約条件
+patch.diff                適用された差分
+git.json                  リポジトリURL、base_ref、SHA
+params.json               シード、エピソード数、タイムアウト
+patch_provider.json       パッチの生成方法
+runtime.json              Pythonバージョン、依存関係ハッシュ
+evaluation_profile.json   重み、合格基準
+metrics.json              ベースライン/候補のメトリクス + デルタ
+summary.json              合否判定 + 理由
+episodes_baseline.jsonl   エピソードごとの生観測データ（ベースライン）
+episodes_candidate.jsonl  エピソードごとの生観測データ（候補）
+stdout.log                sim-eval の標準出力
+stderr.log                sim-eval の標準エラー出力
 ```
 
-## Troubleshooting
+## トラブルシューティング
 
-### Lock file remains after crash
+### クラッシュ後にロックファイルが残る
 
 ```bash
 rm $ARTIFACTS_ROOT/locks/active_run.lock
 ```
 
-### No controller changes detected
+### コントローラーの変更が検出されない
 
-Ensure you have uncommitted changes in `controller/`. Staged or unstaged both work.
+`controller/` にコミットされていない変更があることを確認してください。ステージ済みでも未ステージでも問題ありません。
 
-### sim-eval timeout
+### sim-eval がタイムアウトする
 
-Increase `SIM_TIME_LIMIT_SEC` or `CONNECT_TIMEOUT_SEC` environment variables.
+環境変数 `SIM_TIME_LIMIT_SEC` または `CONNECT_TIMEOUT_SEC` を増やしてください。

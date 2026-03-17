@@ -1,27 +1,27 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# run-eval.sh — Generate patch from controller/ changes and run evaluation.
+# run-eval.sh — controller/ の変更からパッチを生成し、評価を実行する。
 #
-# Usage:
-#   bash scripts/run-eval.sh --goal "Optimization goal" [OPTIONS]
+# 使い方:
+#   bash scripts/run-eval.sh --goal "最適化の目標" [オプション]
 #
-# Options:
-#   --goal TEXT          Required. Optimization goal for the evaluation.
-#   --constraints TEXT   Optional. Constraints for the patch.
-#   --patch-file FILE    Optional. Use an existing patch instead of generating one.
-#   --help               Show this help.
+# オプション:
+#   --goal テキスト         必須。評価の最適化目標。
+#   --constraints テキスト  任意。パッチの制約条件。
+#   --patch-file ファイル   任意。生成する代わりに既存のパッチを使用。
+#   --help                  このヘルプを表示。
 #
-# Environment:
-#   ARTIFACTS_ROOT       Default: /tmp/drone-poc/artifacts
-#   WORKSPACE_ROOT       Default: /tmp/drone-poc/workspace
-#   COPPELIASIM_HOST     Default: 127.0.0.1
-#   COPPELIASIM_PORT     Default: 23000
+# 環境変数:
+#   ARTIFACTS_ROOT       デフォルト: /tmp/drone-poc/artifacts
+#   WORKSPACE_ROOT       デフォルト: /tmp/drone-poc/workspace
+#   COPPELIASIM_HOST     デフォルト: 127.0.0.1
+#   COPPELIASIM_PORT     デフォルト: 23000
 #
-# Exit codes:
-#   0  Evaluation completed successfully
-#   1  Evaluation failed
-#   2  Invalid arguments
+# 終了コード:
+#   0  評価が正常に完了
+#   1  評価が失敗
+#   2  無効な引数
 
 GOAL=""
 CONSTRAINTS=""
@@ -46,55 +46,55 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     *)
-      echo "Error: Unknown argument: $1" >&2
-      echo "Run with --help for usage." >&2
+      echo "エラー: 不明な引数: $1" >&2
+      echo "--help で使い方を確認してください。" >&2
       exit 2
       ;;
   esac
 done
 
 if [[ -z "$GOAL" ]]; then
-  echo "Error: --goal is required." >&2
-  echo "Usage: bash scripts/run-eval.sh --goal \"Optimization goal\"" >&2
+  echo "エラー: --goal は必須です。" >&2
+  echo "使い方: bash scripts/run-eval.sh --goal \"最適化の目標\"" >&2
   exit 2
 fi
 
-# Resolve project root
+# プロジェクトルートを検出
 PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || {
-  echo "Error: Not inside a git repository." >&2
+  echo "エラー: git リポジトリ内ではありません。" >&2
   exit 1
 }
 
 SKILL_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
-# Defaults
+# デフォルト値
 export ARTIFACTS_ROOT="${ARTIFACTS_ROOT:-/tmp/drone-poc/artifacts}"
 export WORKSPACE_ROOT="${WORKSPACE_ROOT:-/tmp/drone-poc/workspace}"
 export REPO_URL="${REPO_URL:-$PROJECT_ROOT}"
 export BASE_REF="${BASE_REF:-$(git -C "$PROJECT_ROOT" rev-parse HEAD)}"
 
-# Activate venv if available
+# 仮想環境が利用可能なら有効化
 if [[ -f "$PROJECT_ROOT/.venv/bin/activate" ]]; then
   # shellcheck disable=SC1091
   source "$PROJECT_ROOT/.venv/bin/activate"
 fi
 
-# Generate patch if not provided
+# パッチが未指定なら生成
 if [[ -z "$PATCH_FILE" ]]; then
-  echo "==> Generating patch from controller/ changes ..."
+  echo "==> controller/ の変更からパッチを生成中 ..."
   PATCH_FILE="/tmp/drone-poc/patch.diff"
   bash "$SKILL_DIR/scripts/gen-patch.sh" --output "$PATCH_FILE"
 else
   if [[ ! -f "$PATCH_FILE" ]]; then
-    echo "Error: Patch file not found: $PATCH_FILE" >&2
+    echo "エラー: パッチファイルが見つかりません: $PATCH_FILE" >&2
     exit 1
   fi
-  echo "==> Using provided patch: $PATCH_FILE"
+  echo "==> 指定されたパッチを使用: $PATCH_FILE"
 fi
 
 export PATCH_FILE
 
-# Build CLI args
+# CLI 引数を構築
 CLI_ARGS=(
   --goal "$GOAL"
   --patch-file "$PATCH_FILE"
@@ -103,8 +103,8 @@ if [[ -n "$CONSTRAINTS" ]]; then
   CLI_ARGS+=(--constraints "$CONSTRAINTS")
 fi
 
-# Run evaluation
-echo "==> Starting evaluation run ..."
+# 評価を実行
+echo "==> 評価実行を開始 ..."
 echo "    REPO_URL=$REPO_URL"
 echo "    BASE_REF=$BASE_REF"
 echo "    ARTIFACTS_ROOT=$ARTIFACTS_ROOT"
@@ -112,9 +112,9 @@ echo ""
 
 if python -m agent_runner.cli "${CLI_ARGS[@]}"; then
   echo ""
-  echo "==> Evaluation completed successfully."
+  echo "==> 評価が正常に完了しました。"
 
-  # Find the latest run and show summary
+  # 最新の実行を検索してサマリーを表示
   LATEST_RUN="$(ls -t "$ARTIFACTS_ROOT/runs/" 2>/dev/null | head -1)"
   if [[ -n "$LATEST_RUN" ]]; then
     echo ""
@@ -123,11 +123,11 @@ if python -m agent_runner.cli "${CLI_ARGS[@]}"; then
 else
   RC=$?
   echo "" >&2
-  echo "==> Evaluation failed (exit code $RC)." >&2
+  echo "==> 評価が失敗しました（終了コード $RC）。" >&2
 
   LATEST_RUN="$(ls -t "$ARTIFACTS_ROOT/runs/" 2>/dev/null | head -1)"
   if [[ -n "$LATEST_RUN" ]]; then
-    echo "    Artifacts: $ARTIFACTS_ROOT/runs/$LATEST_RUN/" >&2
+    echo "    アーティファクト: $ARTIFACTS_ROOT/runs/$LATEST_RUN/" >&2
     STDERR_LOG="$ARTIFACTS_ROOT/runs/$LATEST_RUN/stderr.log"
     if [[ -f "$STDERR_LOG" && -s "$STDERR_LOG" ]]; then
       echo "" >&2

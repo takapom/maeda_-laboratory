@@ -1,24 +1,24 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# read-controller.sh — Print all controller/ source files with context.
+# read-controller.sh — controller/ の全ソースファイルをコンテキスト付きで表示する。
 #
-# Usage:
+# 使い方:
 #   bash scripts/read-controller.sh
 #
-# Exit codes:
-#   0  Success
-#   1  No controller/ directory found
+# 終了コード:
+#   0  成功
+#   1  controller/ ディレクトリが見つからない
 
 PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || {
-  echo "Error: Not inside a git repository." >&2
+  echo "エラー: git リポジトリ内ではありません。" >&2
   exit 1
 }
 
 CONTROLLER_DIR="$PROJECT_ROOT/controller"
 
 if [[ ! -d "$CONTROLLER_DIR" ]]; then
-  echo "Error: controller/ directory not found at $CONTROLLER_DIR" >&2
+  echo "エラー: controller/ ディレクトリが見つかりません: $CONTROLLER_DIR" >&2
   exit 1
 fi
 
@@ -32,7 +32,7 @@ for f in $(find "$CONTROLLER_DIR" -name '*.py' | sort); do
 done
 
 if [[ $FILE_COUNT -eq 0 ]]; then
-  echo "No Python files found in controller/."
+  echo "controller/ に Python ファイルが見つかりませんでした。"
 else
-  echo "--- $FILE_COUNT file(s) ---"
+  echo "--- $FILE_COUNT 個のファイル ---"
 fi
