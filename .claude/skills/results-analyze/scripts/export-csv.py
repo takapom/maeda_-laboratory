@@ -25,7 +25,6 @@ import sys
 from io import StringIO
 from pathlib import Path
 
-
 COLUMNS = [
     "run_id",
     "status",

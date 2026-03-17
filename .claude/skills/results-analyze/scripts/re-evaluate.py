@@ -85,7 +85,8 @@ def main() -> None:
     if ttg_max is not None and candidate_metrics["time_to_goal_mean_sec"] is not None:
         if candidate_metrics["time_to_goal_mean_sec"] > ttg_max:
             reasons.append(
-                f"time_to_goal_mean_sec {candidate_metrics['time_to_goal_mean_sec']:.4f} > {ttg_max}"
+                f"time_to_goal_mean_sec "
+                f"{candidate_metrics['time_to_goal_mean_sec']:.4f} > {ttg_max}"
             )
 
     passed = len(reasons) == 0
