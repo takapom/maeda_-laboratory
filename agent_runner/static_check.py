@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -19,11 +21,12 @@ class CheckResult:
 def run_make_target(target: str, work_dir: Path) -> CheckResult:
     """Run a make target and return the result."""
     result = subprocess.run(
-        ["make", target],
+        ["make", f"PYTHON={sys.executable}", target],
         capture_output=True,
         text=True,
         cwd=str(work_dir),
         timeout=120,
+        env=os.environ.copy(),
     )
     return CheckResult(
         name=target,
