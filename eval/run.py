@@ -204,25 +204,26 @@ def _run_episode(
             reward_delta = _compute_reward(goal_distance, collision_delta)
             total_reward += reward_delta
 
-            step_records.append(
-                {
-                    "episode_index": episode_index,
-                    "seed": seed,
-                    "step_index": step_index,
-                    "sim_time": sim_time,
-                    "position": list(state.position),
-                    "velocity": list(state.velocity),
-                    "goal_position": list(goal_position) if goal_position is not None else None,
-                    "goal_distance": goal_distance,
-                    "command": list(command),
-                    "collision_count": state.collision_count,
-                    "collision_delta": collision_delta,
-                    "reward_delta": reward_delta,
-                    "reward_total": total_reward,
-                    "success": state.success,
-                    "error_code": state.error_code,
-                }
-            )
+            step_record: dict[str, object] = {
+                "episode_index": episode_index,
+                "seed": seed,
+                "step_index": step_index,
+                "sim_time": sim_time,
+                "position": list(state.position),
+                "velocity": list(state.velocity),
+                "goal_position": list(goal_position) if goal_position is not None else None,
+                "goal_distance": goal_distance,
+                "command": list(command),
+                "collision_count": state.collision_count,
+                "collision_delta": collision_delta,
+                "reward_delta": reward_delta,
+                "reward_total": total_reward,
+                "success": state.success,
+                "error_code": state.error_code,
+            }
+            if state.extras:
+                step_record["scene_state"] = state.extras
+            step_records.append(step_record)
 
             success = state.success
             final_error_code = state.error_code

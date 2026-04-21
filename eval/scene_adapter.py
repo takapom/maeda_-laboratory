@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from eval.scene_catalog import SceneDefinition
@@ -24,6 +24,7 @@ class SceneState:
     collision_count: int = 0
     success: bool = False
     error_code: str | None = None
+    extras: dict[str, Any] = field(default_factory=dict)
 
 
 class SceneAdapter:
@@ -84,6 +85,12 @@ class SceneAdapter:
         if error_code_raw is not None and not isinstance(error_code_raw, str):
             raise SceneAdapterError("error_code must be a string when present")
 
+        extras = {
+            str(key): _json_compatible(value)
+            for key, value in raw_state.items()
+            if key not in _KNOWN_STATE_KEYS
+        }
+
         return SceneState(
             position=position,
             velocity=velocity,
@@ -91,6 +98,7 @@ class SceneAdapter:
             collision_count=collision_count,
             success=success,
             error_code=error_code_raw,
+            extras=extras,
         )
 
     def apply_control(self, command: Vector3) -> None:
@@ -117,3 +125,23 @@ def _parse_vector(value: object, label: str) -> Vector3:
         return (float(x), float(y), float(z))
     except (TypeError, ValueError) as exc:
         raise SceneAdapterError(f"{label} must contain numeric values") from exc
+
+
+_KNOWN_STATE_KEYS = {
+    "position",
+    "velocity",
+    "goal_position",
+    "collision_count",
+    "success",
+    "error_code",
+}
+
+
+def _json_compatible(value: object) -> object:
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, Mapping):
+        return {str(key): _json_compatible(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_compatible(item) for item in value]
+    return str(value)

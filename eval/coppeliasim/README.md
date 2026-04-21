@@ -48,6 +48,40 @@ Python 側の evaluator は絶対シーンパス `/EvalBridge` でブリッジ�
   - ダミーや非動的なプロキシオブジェクトを使ったスモークテストにのみ有用です
   - 実際の動的ドローンモデルには適していません
 
+## 速度倍率と waypoint
+
+スモークテストでは、Lua 側で速度倍率と waypoint 経由の移動を設定できます。
+
+- `speed_scale`
+  - Python controller が出した速度指令に掛ける倍率
+  - `0.10` なら実移動量は 1/10、`0.5` なら半分になります
+- `route_mode`
+  - `none`: final Goal のみに向かいます
+  - `axis_steps`: まず浮上し、x 方向、y 方向の順に段階的な target を作り、最後に浮上高度の final Goal へ向かいます
+  - `zigzag_steps`: まず浮上し、Goal 方向の左右に中間 target を作って曲がりながら進みます
+  - `custom_waypoints`: `custom_route_waypoints` に指定した world 座標を順番に通ります
+- `route_lift_height_m`
+  - start 位置から何 m 上に浮上するか
+  - `0.5` なら最初に z 方向へ 0.5m 移動します
+- `route_turn_count`
+  - `zigzag_steps` で追加する曲がり waypoint の数です
+- `route_turn_offset_m`
+  - `zigzag_steps` で直線ルートから左右にずらす距離です
+- `move_goal_object_to_active_route_target`
+  - `true` の場合、CoppeliaSim 上の `/Goal` 表示も現在の target に移動します
+
+例:
+
+```lua
+speed_scale = 0.10,
+route_mode = 'zigzag_steps',
+route_lift_height_m = 0.5,
+route_turn_count = 6,
+route_turn_offset_m = 0.35,
+route_waypoint_tolerance_m = 0.10,
+move_goal_object_to_active_route_target = true,
+```
+
 ## 必須設定
 
 `EvalBridge.lua` の `CONFIG` ブロックを編集してください。

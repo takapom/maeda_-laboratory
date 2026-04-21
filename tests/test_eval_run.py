@@ -64,6 +64,7 @@ class FakeSceneAdapter:
             collision_count=collision_count,
             success=success,
             error_code=None,
+            extras={"route_phase": "test", "active_route_index": step_index + 1},
         )
 
     def apply_control(self, command):
@@ -139,6 +140,8 @@ def test_main_runs_episode_loop_and_writes_logs(tmp_path: Path, monkeypatch) -> 
     assert len(step_lines) == 3
     assert step_lines[-1]["success"] is True
     assert step_lines[-1]["goal_distance"] == 0.0
+    assert step_lines[-1]["scene_state"]["route_phase"] == "test"
+    assert step_lines[-1]["scene_state"]["active_route_index"] == 4
 
     scene_info = json.loads((output_dir / "scene_info.json").read_text())
     assert scene_info["scene_path"] == "/tmp/default_drone.ttt"
