@@ -1,0 +1,25 @@
+# Suggested Commands
+- Setup:
+  - `python3 -m venv .venv`
+  - `source .venv/bin/activate`
+  - `pip install -e ".[dev]"`
+- Quality checks:
+  - `make lint`
+  - `make typecheck`
+  - `make unit`
+- Direct equivalents:
+  - `python3 -m ruff check .`
+  - `python3 -m mypy agent_runner sim_eval controller eval --ignore-missing-imports`
+  - `python3 -m pytest tests/ -v`
+- Entrypoints:
+  - `python -m agent_runner.cli --goal "Reduce collision count" --patch-file /tmp/my-patch.diff`
+  - `agent-runner ...`
+  - `python -m sim_eval.cli ...`
+  - `sim-eval ...`
+  - `python -m sim_eval.smoke_test`
+- Git inspection:
+  - `git status --short --branch`
+  - `git log --oneline --decorate -n 12`
+  - `git diff`
+- macOS basics:
+  - `ls`, `cd`, `pwd`, `find`, `rg`, `sed -n 'start,endp' file`

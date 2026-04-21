@@ -15,12 +15,13 @@ def configure(workspace_root: str) -> None:
     _workspace_root = Path(workspace_root)
 
 
-def fresh_clone(repo_url: str, base_ref: str, run_id: str) -> Path:
-    """Clone repo at base_ref into <workspace_root>/<run_id>/."""
-    work_dir = _workspace_root / run_id
+def fresh_clone(repo_url: str, base_ref: str, run_id: str, slot: str) -> Path:
+    """Clone repo at base_ref into <workspace_root>/<run_id>/<slot>/."""
+    run_dir = _workspace_root / run_id
+    work_dir = run_dir / slot
     if work_dir.exists():
         shutil.rmtree(work_dir)
-    work_dir.mkdir(parents=True, exist_ok=True)
+    work_dir.parent.mkdir(parents=True, exist_ok=True)
 
     subprocess.run(
         ["git", "clone", "--quiet", repo_url, str(work_dir)],

@@ -1,4 +1,8 @@
 scenes:
   - scene_id: default
-    scene_path: scenes/default_drone.ttt
+    scene_path: ${COPPELIASIM_DEFAULT_SCENE_PATH}
     scene_version: "1.0.0"
+    bridge_script_path: /EvalBridge
+    bridge_reset_function: reset_episode
+    bridge_read_state_function: read_state
+    bridge_apply_control_function: apply_control

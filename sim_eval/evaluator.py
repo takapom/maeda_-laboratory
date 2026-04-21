@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -29,13 +30,13 @@ def run_episodes(
     seed_csv = ",".join(str(s) for s in seed_list)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    env = {
+    env = os.environ.copy()
+    env.update({
         "COPPELIASIM_HOST": coppeliasim_host,
         "COPPELIASIM_PORT": str(coppeliasim_port),
         "CONNECT_TIMEOUT_SEC": str(connect_timeout_sec),
         "SIM_TIME_LIMIT_SEC": str(sim_time_limit_sec),
-        "PATH": "/usr/local/bin:/usr/bin:/bin",
-    }
+    })
 
     result = subprocess.run(
         [
@@ -51,6 +52,9 @@ def run_episodes(
         env=env,
         timeout=connect_timeout_sec + len(seed_list) * sim_time_limit_sec + 60,
     )
+
+    (output_dir / "eval_stdout.log").write_text(result.stdout)
+    (output_dir / "eval_stderr.log").write_text(result.stderr)
 
     if result.returncode != 0:
         raise RuntimeError(

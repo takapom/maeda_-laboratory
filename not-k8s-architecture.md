@@ -737,3 +737,38 @@ PoC 完了条件は以下。
 - timeout 時に sim-eval が hanging しない
 - active run 中は新規 run が拒否される
 - run に必要な再現情報が artifacts に残る
+
+## 26. 現行実装における未実装 / 暫定実装
+
+本節は、要件に対する現行実装の差分を明示するためのものである。
+
+### 26.1 すでに成立しているもの
+
+- Agent Runner から 1 run を開始し、fresh clone、patch 適用、static check、sim-eval 起動、artifact 保存までを end-to-end で完走できる
+- `request.json`, `git.json`, `params.json`, `patch_provider.json`, `runtime.json`, `evaluation_profile.json`, `metrics.json`, `summary.json`, `episodes_*.jsonl`, `stdout.log`, `stderr.log` を出力できる
+- 手動 `patch.diff` を入力として run を成立させることができる
+- `metrics.json` と `summary.json` の fallback 生成が動作する
+
+### 26.2 未実装
+
+- `eval/run.py` は現時点で CoppeliaSim 実評価を行わず、乱数ベースの stub observation を返している
+- `controller/` の実装差分を用いて drone 制御を行う evaluator は未実装である
+- `SimClient` は存在するが、現行 main フローでは `eval/run.py` から利用されていない
+- scene load / reset / stepping loop / state observation / control command apply の本実装は未実装である
+- `scene_id -> scene_path` のマッピング定義はあるが、リポジトリ内には対応する scene 実体ファイルがまだ含まれていない
+- baseline source と candidate source を別ディレクトリとして構成し、同一 run 内で厳密に before / after を比較する処理は未実装である
+
+### 26.3 暫定実装
+
+- 現行の `sim-eval` は `baseline-dir` と `candidate-dir` の引数を持つが、Agent Runner は現在同じ `work_dir` を両方に渡している
+- そのため、現行の `metrics.json` / `summary.json` は「コード差分の実評価結果」ではなく、「評価パイプラインが動作したことの確認結果」として解釈する
+- `episodes_*.jsonl` の値は現時点では simulator の実挙動ではなく、integration 確認用のダミー値である
+- `passed: true` は evaluation profile 上の判定結果であり、controller 改善が実際に起きたことを保証しない
+
+### 26.4 次の実装優先順位
+
+- `eval/run.py` を CoppeliaSim 実接続型 evaluator に置き換える
+- `controller/` を読み込んで control loop に反映する
+- baseline 用 source tree と candidate 用 source tree を明示的に分離する
+- scene 実体ファイルと scene I/O 契約を固定する
+- raw observation が simulator の実測値になるように episode loop を実装する

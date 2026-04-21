@@ -116,6 +116,38 @@ python -m agent_runner.cli \
 COPPELIASIM_HOST=<host> COPPELIASIM_PORT=<port> make smoke-test
 ```
 
+## 手動で開いた scene を使う実行
+
+`sim.loadScene(...)` が不安定な環境では、CoppeliaSim で scene を手動で開いたまま
+`eval.run` / `eval.debug_scene` を `skip-load` モードで実行できる。
+
+```bash
+python -m eval.debug_scene \
+  --source-dir /path/to/repo \
+  --scene-id default \
+  --seed 42 \
+  --steps 2 \
+  --command 0.2 0 0 \
+  --skip-load-scene
+```
+
+```bash
+python -m eval.run \
+  --source-dir /path/to/repo \
+  --scene-id default \
+  --seed-list 42 \
+  --output-dir /tmp/eval-run \
+  --skip-load-scene
+```
+
+## EvalBridge 雛形
+
+CoppeliaSim 側の `/EvalBridge` script object の Lua 雛形は
+[`eval/coppeliasim/EvalBridge.lua`](eval/coppeliasim/EvalBridge.lua) に置いてある。
+
+scene への組み込み手順と契約は
+[`eval/coppeliasim/README.md`](eval/coppeliasim/README.md) を参照。
+
 ## テスト
 
 ```bash

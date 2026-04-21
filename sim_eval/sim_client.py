@@ -58,6 +58,11 @@ class SimClient:
         """Load a scene file."""
         self.sim.loadScene(scene_path)
 
+    def get_script_functions(self, script_path: str) -> Any:
+        """Return a callable proxy for a scene script object."""
+        script_handle = self.sim.getObject(script_path)
+        return self.sim.getScriptFunctions(script_handle)
+
     def start_simulation(self) -> None:
         """Start simulation in stepping mode."""
         self.sim.setStepping(True)

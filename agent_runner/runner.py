@@ -29,7 +29,8 @@ def execute_run(
     errors: list[dict[str, Any]] = []
     stage = RunStage.PATCH_GENERATE
     status = RunStatus.FAILED
-    work_dir: Path | None = None
+    baseline_dir: Path | None = None
+    candidate_dir: Path | None = None
 
     try:
         # --- Configure paths from config ---
@@ -45,8 +46,9 @@ def execute_run(
 
         # --- Fresh clone ---
         print(f"[{rid}] Cloning {config.repo_url} @ {config.base_ref} ...")
-        work_dir = workspace.fresh_clone(config.repo_url, config.base_ref, rid)
-        controller_base_sha = _git_rev(work_dir)
+        baseline_dir = workspace.fresh_clone(config.repo_url, config.base_ref, rid, "baseline")
+        candidate_dir = workspace.fresh_clone(config.repo_url, config.base_ref, rid, "candidate")
+        controller_base_sha = _git_rev(baseline_dir)
 
         # --- Save request.json ---
         artifacts.write_json(rid, "request.json", {
@@ -87,7 +89,7 @@ def execute_run(
         # --- Patch generation ---
         stage = RunStage.PATCH_GENERATE
         print(f"[{rid}] Resolving patch ...")
-        controller_code = _read_controller(work_dir)
+        controller_code = _read_controller(baseline_dir)
         patch_result = resolve_patch(config, goal, constraints, controller_code)
         patch_content = patch_result.patch_content
         patch_sha = compute_sha256(patch_content)
@@ -101,7 +103,7 @@ def execute_run(
         stage = RunStage.PATCH_APPLY
         print(f"[{rid}] Applying patch (sha256={patch_sha[:12]}...) ...")
         try:
-            apply_patch(patch_content, work_dir)
+            apply_patch(patch_content, candidate_dir)
         except PatchError as e:
             errors.append(RunError("patch_apply_failed", str(e)).to_dict())
             raise
@@ -109,7 +111,7 @@ def execute_run(
         # --- Static checks ---
         stage = RunStage.STATIC_CHECK
         print(f"[{rid}] Running static checks ...")
-        check_results = run_static_checks(work_dir)
+        check_results = run_static_checks(candidate_dir)
         for cr in check_results:
             if not cr.passed:
                 errors.append(RunError(
@@ -122,15 +124,17 @@ def execute_run(
         stage = RunStage.EVAL_START
         print(f"[{rid}] Starting sim-eval ...")
         eval_output = Path(config.artifacts_root) / "runs" / rid
+        evaluation_profile_path = artifacts.run_dir(rid) / "evaluation_profile.json"
         seed_csv = ",".join(str(s) for s in config.seed_list)
 
         sim_eval_cmd = [
             sys.executable, "-m", "sim_eval.cli",
-            "--baseline-dir", str(work_dir),
-            "--candidate-dir", str(work_dir),
+            "--baseline-dir", str(baseline_dir),
+            "--candidate-dir", str(candidate_dir),
             "--scene-id", config.scene_id,
             "--seed-list", seed_csv,
             "--output-dir", str(eval_output),
+            "--evaluation-profile", str(evaluation_profile_path),
             "--sim-time-limit-sec", str(config.sim_time_limit_sec),
             "--connect-timeout-sec", str(config.connect_timeout_sec),
             "--coppeliasim-host", config.coppeliasim_host,
@@ -182,7 +186,7 @@ def execute_run(
             artifacts.write_text(rid, "stderr.log", "")
 
         # --- Cleanup ---
-        if work_dir:
+        if baseline_dir or candidate_dir:
             workspace.cleanup(rid)
         artifacts.cleanup_old_runs()
         lock.release()

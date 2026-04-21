@@ -1,0 +1,11 @@
+# Project Overview
+- Name: `drone-eval-poc`
+- Purpose: Proof-of-concept framework for evaluating LLM-generated modifications to drone controller code. An operator or API generates a patch against `controller/`, `agent_runner` applies it to a fresh clone, runs static checks, then invokes `sim_eval` to compare baseline and candidate runs and save artifacts.
+- Tech stack: Python 3.11+, setuptools, pytest, ruff, mypy, PyYAML, OpenAI Python SDK, coppeliasim-zmqremoteapi-client.
+- Key packages:
+  - `agent_runner/`: orchestration for cloning, patch resolution/application, static checks, artifact handling, run lifecycle.
+  - `sim_eval/`: evaluation CLI, metric aggregation, comparison, smoke test.
+  - `controller/`: controller code intended to be modified by an LLM.
+  - `eval/`: repo contract for episode execution (`python -m eval.run`).
+  - `tests/`: unit tests for patch handling, metrics, comparison, lock handling, patch provider.
+- Current maturity: PoC stage. README explicitly states `eval/run.py` is still a random stub for integration testing rather than real simulator-backed evaluation.

@@ -1,0 +1,11 @@
+# Style And Conventions
+- Language: Python.
+- Python version target: 3.11 (`requires-python >=3.11`, mypy set to 3.11).
+- Formatting/linting: Ruff with line length 100 and lint rules `E`, `F`, `W`, `I`.
+- Typing: `mypy` runs in `strict = true`, so full type hints are expected.
+- Code style observed:
+  - Use datamodel-style types from `agent_runner.models`.
+  - Functions and modules are small and single-purpose.
+  - Docstrings are concise and present on core functions/classes.
+  - JSON artifact outputs and CLI behavior are explicit and structured.
+- Naming: snake_case for functions/modules/variables, PascalCase for classes, explicit filenames matching responsibilities.
